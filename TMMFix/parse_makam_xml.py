@@ -2,16 +2,16 @@ from music21 import *
 import xml.etree.ElementTree as ET
 
 ALTER_VALUES = {
-    "quarter-flat": "-1",
-    "slash-flat": "-4",
-    "double-slash-flat": "-8",
-    "flat": "-5",
-    "double-flat": "-9",
-    "quarter-sharp": "+1",
-    "sharp": "+4",
-    "slash-quarter-sharp": "+5",
-    "slash-sharp": "+8",
-    "double-sharp": "+9",
+    'half-flat': '-1',
+    'slash-flat': '-4',
+    'double-slash-flat': '-8',
+    'flat': '-5',
+    'double-flat': '-9',
+    'half-sharp': '+1',
+    'sharp': '+4',
+    'slash-quarter-sharp': '+5',
+    'slash-sharp': '+8',
+    'double-sharp': '+9',
 }
 
 TONE_DIVISION = 200 / 9
@@ -107,8 +107,16 @@ def fix_m21_parsing_makam(file_name: str) -> stream.Stream:
         if att.find("key") != None:
             att.remove(att.find("key"))
 
+    # # Remove all alter values from pitch
+    # for note in tree.findall(".//note"):
+    #     pitch = note.find(".//pitch")
+    #     if pitch is not None:
+    #         alter_element = pitch.find("alter")
+    #         if alter_element is not None:
+    #             pitch.remove(alter_element)
+
     # Save the fixed XML file with a new name
-    new_file_name = file_name.replace(".xml", "_fixed.xml")
+    new_file_name = file_name.replace(".xml", "_fixed420.xml")
     tree.write(new_file_name)
 
     # Parse the fixed XML score with music21
@@ -119,9 +127,12 @@ def fix_m21_parsing_makam(file_name: str) -> stream.Stream:
 
     # Assign microtone deviation in cents based on alter value
     for n in notes:
-        if n.pitch.accidental:
-            n.pitch.microtone = round(n.pitch.alter * TONE_DIVISION)
-            # n.pitch.microtone = round(n.pitch.alter * (200 / 9))
+        if n.pitch.accidental is not None:
+            alter_v = ALTER_VALUES.get(n.pitch.accidental.name)
+            if alter_v == None:
+                print(n.pitch.accidental.name)
+                print(alter_v)
+            n.pitch.microtone = round(int(alter_v) * TONE_DIVISION)
 
 
     return notes
