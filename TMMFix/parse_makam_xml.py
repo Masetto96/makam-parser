@@ -61,7 +61,7 @@ def _update_alter_values_in_xml(notes):
 
         # If accidental_text is found in ALTER_VALUES, update the alter value
         if accidental_text in ALTER_VALUES:
-            new_alter_value = ALTER_VALUES[accidental_text]
+            new_alter_value = ALTER_VALUES.get(accidental_text)
 
             # Find the alter element in the pitch, if not found, create a new element
             alter_element = pitch.find("alter")
@@ -120,6 +120,8 @@ def fix_m21_parsing_makam(file_name: str) -> stream.Stream:
     # Assign microtone deviation in cents based on alter value
     for n in notes:
         if n.pitch.accidental:
-            n.pitch.microtone = n.pitch.alter * TONE_DIVISION
+            n.pitch.microtone = round(n.pitch.alter * TONE_DIVISION)
+            # n.pitch.microtone = round(n.pitch.alter * (200 / 9))
+
 
     return notes
