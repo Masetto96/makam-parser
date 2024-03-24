@@ -2,16 +2,16 @@ from music21 import *
 import xml.etree.ElementTree as ET
 
 ALTER_VALUES = {
-    'half-flat': '-1',
-    'slash-flat': '-4',
-    'double-slash-flat': '-8',
-    'flat': '-5',
-    'double-flat': '-9',
-    'half-sharp': '+1',
-    'sharp': '+4',
-    'slash-quarter-sharp': '+5',
-    'slash-sharp': '+8',
-    'double-sharp': '+9',
+    'half-flat': (-1, 0),
+    'slash-flat': (-4, 0),
+    'double-slash-flat': (-8, 0),
+    'flat': (-5, -1),
+    'double-flat': (-9, 0),
+    'half-sharp': (+1, 0),
+    'sharp': (+4, +1),
+    'slash-quarter-sharp': (+5, 0),
+    'slash-sharp': (+8, 0),
+    'double-sharp': (+9, 0),
 }
 
 TONE_DIVISION = 200 / 9
@@ -61,7 +61,7 @@ def _update_alter_values_in_xml(notes):
 
         # If accidental_text is found in ALTER_VALUES, update the alter value
         if accidental_text in ALTER_VALUES:
-            new_alter_value = ALTER_VALUES.get(accidental_text)
+            new_alter_value, _ = ALTER_VALUES.get(accidental_text)
 
             # Find the alter element in the pitch, if not found, create a new element
             alter_element = pitch.find("alter")
@@ -76,7 +76,7 @@ def _update_alter_values_in_xml(notes):
     return accidentals_found
 
 
-def fix_m21_parsing_makam(file_name: str) -> stream.Stream:
+def fix_m21_parsing_makam(file_name: str, remove_alter=False) -> stream.Stream:
     """
     Fix the parsing of a Makam XML file by updating the alter values of notes,
     removing the key signature, and adding microtone deviation to pitch based on the alter value.
@@ -107,16 +107,17 @@ def fix_m21_parsing_makam(file_name: str) -> stream.Stream:
         if att.find("key") != None:
             att.remove(att.find("key"))
 
-    # # Remove all alter values from pitch
-    # for note in tree.findall(".//note"):
-    #     pitch = note.find(".//pitch")
-    #     if pitch is not None:
-    #         alter_element = pitch.find("alter")
-    #         if alter_element is not None:
-    #             pitch.remove(alter_element)
+    if remove_alter:
+        # Remove all alter values from pitch
+        for note in tree.findall(".//note"):
+            pitch = note.find(".//pitch")
+            if pitch is not None:
+                alter_element = pitch.find("alter")
+                if alter_element is not None:
+                    pitch.remove(alter_element)
 
     # Save the fixed XML file with a new name
-    new_file_name = file_name.replace(".xml", "_fixed420.xml")
+    new_file_name = file_name.replace(".xml", "_fixed_alter.xml")
     tree.write(new_file_name)
 
     # Parse the fixed XML score with music21
@@ -128,11 +129,11 @@ def fix_m21_parsing_makam(file_name: str) -> stream.Stream:
     # Assign microtone deviation in cents based on alter value
     for n in notes:
         if n.pitch.accidental is not None:
-            alter_v = ALTER_VALUES.get(n.pitch.accidental.name)
+            alter_v, alter_default = ALTER_VALUES.get(n.pitch.accidental.name)
             if alter_v == None:
                 print(n.pitch.accidental.name)
                 print(alter_v)
-            n.pitch.microtone = round(int(alter_v) * TONE_DIVISION)
+            n.pitch.microtone = round(alter_v * TONE_DIVISION)
 
 
     return notes
