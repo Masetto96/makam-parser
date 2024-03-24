@@ -15,6 +15,14 @@ Finally, the parser adjusts microtone values for pitches, based on the alter val
 pip install music21
 ```
 
+Clone the dataset in the parent directory as well.
+
+```bash
+git clone https://github.com/MTG/SymbTr.git
+```
+
+If the datset location is different, set the correct path in `demo.ipynb` file.
+
 ## Usage
 ```python
 from TMMFix.parse_makam_xml import fix_m21_parsing_makam
